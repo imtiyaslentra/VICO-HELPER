@@ -1,0 +1,64 @@
+local AutoParryHelper = {}
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local Stats = game:GetService("Stats")
+
+-- Function to find the target ball
+function AutoParryHelper.FindTargetBall()
+    -- Iterate through all children under the "Balls" folder in the workspace
+    for _, ball in pairs(workspace:WaitForChild("Balls"):GetChildren()) do
+        -- Check if the object is a BasePart and has the "realBall" attribute set to true
+        if ball:IsA("BasePart") and ball:GetAttribute("realBall") then
+            return ball
+        end
+    end
+end
+
+-- Function to check if the ball's target is the local player
+function AutoParryHelper.IsPlayerTarget(ball)
+    -- Compare the "target" attribute of the ball to the local player's name
+    return ball:GetAttribute("target") == localPlayer.Name
+end
+
+-- Services used in the game
+local Services = {
+    game:GetService('AdService'),
+    game:GetService('SocialService')
+}
+
+-- Function to check if the entity (player) is alive
+function AutoParryHelper.isAlive(Entity)
+    -- Check if the entity's character exists, is present in the "Alive" folder, and has positive health
+    return Entity.Character 
+        and workspace.Alive:FindFirstChild(Entity.Name) 
+        and workspace.Alive:FindFirstChild(Entity.Name).Humanoid.Health > 0
+end
+
+-- Function to calculate the player's network ping and return the adjustment factor
+function AutoParryHelper.GetPingAdjustment()
+    -- Get the player's network ping value
+    local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+    -- Return the ping value divided by 1000 to convert it into seconds
+    return ping / 1000
+end
+
+-- Function to get the ball's speed by calculating its velocity magnitude
+function AutoParryHelper.GetBallSpeed(ball)
+    -- Return the magnitude of the ball's AssemblyLinearVelocity (speed in studs per second)
+    return ball.AssemblyLinearVelocity.Magnitude
+end
+
+-- Function to calculate the distance between the local player and the ball
+function AutoParryHelper.GetDistanceFromBall(ball)
+    -- Use the built-in function DistanceFromCharacter to get the distance from the player to the ball
+    return localPlayer:DistanceFromCharacter(ball.Position)
+end
+
+-- Function to predict the ball's position in the future based on its current velocity and a time delta
+function AutoParryHelper.PredictBallPosition(ball, timeDelta)
+    -- Return the ball's future position by adding the current position to the velocity multiplied by the timeDelta
+    return ball.Position + ball.AssemblyLinearVelocity * timeDelta
+end
+
+return AutoParryHelper
